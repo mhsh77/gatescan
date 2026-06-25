@@ -15,6 +15,21 @@ CSV_RESULTS_PATH = os.environ.get("CSV_RESULTS_PATH", "campaign_results.csv")
 MANIFEST_PATH = os.environ.get("MANIFEST_PATH", "targets.json")
 PROGRESS_FILE = os.environ.get("PROGRESS_FILE", "glfi_progress.json")
 SIM_CYCLES = int(os.environ.get("SIM_CYCLES", "1000"))
+TEST_VECTORS_FILE = os.environ.get("TEST_VECTORS_FILE", "")
+
+def load_test_vectors():
+    """Load AI-generated test vectors if available."""
+    if not TEST_VECTORS_FILE:
+        return None
+    try:
+        import json
+        with open(TEST_VECTORS_FILE) as f:
+            vecs = json.load(f)
+        print(f"  [AI] Loaded {len(vecs)} AI-generated test vectors")
+        return vecs
+    except Exception as e:
+        print(f"  [AI] Failed to load vectors: {e}, falling back to random")
+        return None
 
 # متغیرهای تقسیم کار برای امکان اجرای موازی (Multi-core / Hyperscale)
 SPLIT_TOTAL = int(os.environ.get("SPLIT_TOTAL", "1"))
@@ -96,13 +111,17 @@ class GenericCampaignMaster:
                 port_width = len(pin)
                 val = random.randint(0, (2**port_width) - 1)
                 
-                vec[pin._name] = val
+                if pin._name not in vec:
+                    vec[pin._name] = val
                 try: 
-                    getattr(self.dut, pin._name).value = val
+                    getattr(self.dut, pin._name).value = vec[pin._name]
                 except Exception as e: 
                     pass
                 
-            self.input_vectors.append(vec)
+            if not use_ai:
+                self.input_vectors.append(vec)
+            else:
+                self.input_vectors.append(ai_vectors[vec_idx] if vec_idx < len(ai_vectors) else vec)
 
             # اعمال کلاک یا ایجاد تاخیر
             if self.clock_signal: 
