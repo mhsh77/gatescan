@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
-from app.api import router_synthesis, router_glfi, router_files, router_ai
+from app.api import router_synthesis, router_glfi, router_files, router_ai, router_mark2
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -22,6 +22,7 @@ app.include_router(router_synthesis.router, prefix="/api/synthesis", tags=["1. L
 app.include_router(router_glfi.router, prefix="/api/glfi", tags=["2. Fault Injection Campaign"])
 app.include_router(router_files.router, prefix="/api/sessions", tags=["3. Session Files"])
 app.include_router(router_ai.router, prefix="/api/ai", tags=["4. AI Testbench"])
+app.include_router(router_mark2.router, prefix="/api/mark2", tags=["5. Mark 2 Cognitive Engine"])
 
 @app.get("/api/health", tags=["Health Check"])
 async def health():
